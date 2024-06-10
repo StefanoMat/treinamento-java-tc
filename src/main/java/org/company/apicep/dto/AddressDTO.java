@@ -1,7 +1,9 @@
 package org.company.apicep.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
+@Builder
 @Data
 public class AddressDTO {
     private String cep;
