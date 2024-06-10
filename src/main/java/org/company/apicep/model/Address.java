@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.Length;
 
 @Data
@@ -35,4 +36,8 @@ public class Address {
 
     @NotNull(message = "The ddd field is required.")
     private Integer ddd;
+
+    @Column(name = "deleted", nullable = false)
+    @Convert(converter = org.hibernate.type.NumericBooleanConverter.class)
+    private boolean deleted = false;
 }
