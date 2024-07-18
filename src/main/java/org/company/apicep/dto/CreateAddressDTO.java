@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Builder
 @Data
-public class AddressDTO {
-    private String id;
+public class CreateAddressDTO{
     private String cep;
     private String logradouro;
     private String complemento;

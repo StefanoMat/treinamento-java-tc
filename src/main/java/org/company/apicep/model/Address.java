@@ -17,7 +17,7 @@ public class Address {
 
     @NotBlank(message = "The cep field is required.")
     @Size(max = 9, message = "The cep field required a max length of 9.")
-    @Column(unique = true)
+    @Column(unique = false)
     private String cep;
 
     private String logradouro;

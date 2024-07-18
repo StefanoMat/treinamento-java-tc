@@ -1,26 +1,35 @@
 package org.company.apicep.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.company.apicep.dto.AddressDTO;
 import org.company.apicep.dto.AddressListDTO;
+import org.company.apicep.dto.CreateAddressDTO;
 import org.company.apicep.model.Address;
+import org.company.apicep.orchestrator.AddressOrchestrator;
 import org.company.apicep.repository.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class AddressService {
     private RestTemplate restTemplate;
     private AddressRepository addressRepository;
+    private AddressOrchestrator addressOrchestrator;
 
     public AddressDTO getAddressByCEP(String cep) {
         //Se existir o cep, nao precisa salvar.
@@ -39,6 +48,39 @@ public class AddressService {
         } else {
             return mapDto(optionalAddress.get());
         }
+    }
+
+    public Address createAddress(Address address) throws Exception {
+        Address responseEntity = addressRepository.save(address);
+        return responseEntity;
+    }
+
+    public List<AddressDTO> createAddresses(List<AddressDTO> addressDTOS) {
+        var listEntity = addressDTOS.stream().map(a -> mapEntity(a)).collect(Collectors.toList());
+        List<Address> addressResponse = new ArrayList<>();
+        for (Address a:listEntity) {
+            var saved = addressRepository.save(a);
+            addressResponse.add(saved);
+        }
+        return addressResponse.stream().map(address -> mapDto(address)).collect(Collectors.toList());
+    }
+
+    public List<AddressDTO> createBulkAddress(List<AddressDTO> addressDTOS) {
+        log.info("Starting createBulkAddress");
+        var listEntity = addressDTOS.stream().map(a -> mapEntity(a)).collect(Collectors.toList());
+        var response = addressOrchestrator.createAddresses(listEntity);
+        log.info("finish bulkAddress");
+        return response.stream().map(address -> mapDto(address)).collect(Collectors.toList());
+    }
+
+    public void createAsyncBulkAddress(List<AddressDTO> addressDTOS) {
+        try {
+            var listEntity = addressDTOS.stream().map(a -> mapEntity(a)).collect(Collectors.toList());
+            addressOrchestrator.createAddressesAsync(listEntity);
+        } catch ( Exception e) {
+            log.error("error creating product", e);
+        }
+
     }
 
     public void deleteAddressById(Long id) {
